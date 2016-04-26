@@ -3,7 +3,6 @@ if (!process.env.SLACK_BOT_TOKEN) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
-var request = require('request');
 var Botkit = require('botkit');
 var herald = require('./herald.js');
 
