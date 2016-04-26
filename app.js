@@ -1,5 +1,5 @@
 var dotenv = require('dotenv').config();
-if (!process.env.SLACK_WEB_TOKEN) {
+if (!process.env.SLACK_BOT_TOKEN) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
@@ -8,7 +8,7 @@ var request = require('request');
 function slackApi(method, args) {
   var queries = [];
   if (!args) args = {};
-  args.token = process.env.SLACK_WEB_TOKEN;
+  args.token = process.env.SLACK_BOT_TOKEN;
   for (var key in args) {
     queries.push(key + '=' + args[key]);
   }
@@ -39,11 +39,7 @@ function slackApi(method, args) {
   return promise;
 }
 
-function getUsers() {
-  return slackApi('users.list');
-}
-
-getUsers().then(function cleanUserData(data) {
+slackApi('users.list').then(function cleanUserData(data) {
   var members = data.members.map(function(member) {
     if (!member.deleted) {
       return {
