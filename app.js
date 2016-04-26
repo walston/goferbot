@@ -10,8 +10,13 @@ var herald = require('./herald.js');
 var controller = Botkit.slackbot({ debug: true });
 controller.spawn({ token: process.env.SLACK_BOT_TOKEN }).startRTM();
 
-controller.on('direct_message', function converse(bot, message) {
-  bot.reply(message, 'Just kidding. I just showed up: I\'ve got no clue what\'s going on');
+controller.on('direct_message', function heraldResponse(bot, message) {
+  bot.startConversation(message, function conversation(err, convo) {
+    convo.ask('What would you like?', function takeOrder(response, convo) {
+      convo.say('Awesome: `' + response.text + '` has been added to the order');
+      convo.next();
+    });
+  });
 });
 
 herald();
