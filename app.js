@@ -67,4 +67,12 @@ getUsers().then(function cleanUserData(data) {
   return interested;
 }).then(function openChats(user) {
   return slackApi('im.open', {user: user.id});
+}).then(function sendMessage(response) {
+  var channel = response.channel.id;
+  var message = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+  return slackApi('chat.postMessage', {
+    channel: channel,
+    as_user: true,
+    text: message
+  });
 });
