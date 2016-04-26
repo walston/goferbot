@@ -1,0 +1,29 @@
+{
+  "name": "goferbot",
+  "version": "1.0.0",
+  "description": "A slack bot to coordinate the morning coffee run for small offices",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walston/goferbot.git"
+  },
+  "keywords": [
+    "coffee",
+    "bot",
+    "slack",
+    "coffee-run"
+  ],
+  "author": "Nathan Walston",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/walston/goferbot/issues"
+  },
+  "homepage": "https://github.com/walston/goferbot#readme",
+  "dependencies": {
+    "dotenv": "^2.0.0",
+    "request": "^2.72.0"
+  }
+}
