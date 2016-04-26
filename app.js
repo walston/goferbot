@@ -25,6 +25,7 @@ function slackApi(method, args) {
           }
           else {
             console.log('response from ' + method + ' is not "ok":');
+            console.log(response);
             reject(response);
           }
         }
@@ -42,7 +43,7 @@ function getUsers() {
   return slackApi('users.list');
 }
 
-getUsers().then(function(data) {
+getUsers().then(function cleanUserData(data) {
   var members = data.members.map(function(member) {
     if (!member.deleted) {
       return {
@@ -59,4 +60,11 @@ getUsers().then(function(data) {
     }
   }
   return stillMembers;
+}).then(function findInterested(members) {
+  var interested = members.find(function(user) {
+    return user.name == 'walston';
+  });
+  return interested;
+}).then(function openChats(user) {
+  return slackApi('im.open', {user: user.id});
 });
