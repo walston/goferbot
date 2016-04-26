@@ -1,0 +1,45 @@
+var dotenv = require('dotenv').config();
+if (!process.env.SLACK_WEB_TOKEN) {
+  console.log('Error: Specify token in environment');
+  process.exit(1);
+}
+var request = require('request');
+
+function slackApi(method, args) {
+  var queries = [];
+  if (!args) args = {};
+  args.token = process.env.SLACK_WEB_TOKEN;
+  for (var key in args) {
+    queries.push(key + '=' + args[key]);
+  }
+  var queryString = '?' + queries.join('&');
+  var promise = new Promise(function(resolve, reject) {
+    request.get(
+      'https://slack.com/api/' + method + queryString,
+      function receiving(err, response) {
+        if (!err) {
+          response = JSON.parse(response.body);
+          if (response.ok) {
+            console.log('response from ' + method + ' is "ok":');
+            resolve(response);
+          }
+          else {
+            console.log('response from ' + method + ' is not "ok":');
+            reject(response);
+          }
+        }
+        else {
+          console.log('response from ' + method + ' has errored:');
+          reject(err)
+        }
+      }
+    )
+  })
+  return promise;
+}
+
+function getUsers() {
+  return slackApi('users.list');
+}
+
+getUsers();
