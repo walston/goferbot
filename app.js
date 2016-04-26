@@ -42,4 +42,21 @@ function getUsers() {
   return slackApi('users.list');
 }
 
-getUsers();
+getUsers().then(function(data) {
+  var members = data.members.map(function(member) {
+    if (!member.deleted) {
+      return {
+        id: member.id,
+        name: member.name,
+        real_name: member.real_name
+      }
+    }
+  })
+  var stillMembers = [];
+  for (var i = 0; i < members.length; i++) {
+    if (members[i]) {
+      stillMembers.push(members[i]);
+    }
+  }
+  return stillMembers;
+});
