@@ -8,7 +8,8 @@ var herald = require('./herald.js');
 var dbmanager = require('./dbmanager.js')
 
 var controller = Botkit.slackbot({ debug: true });
-controller.spawn({ token: process.env.SLACK_BOT_TOKEN }).startRTM();
+var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN })
+botkit.startRTM();
 
 controller.hears('pick up', 'direct_message', function(bot, message) {
   var list = dbmanager.get(message.team);
