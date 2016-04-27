@@ -33,8 +33,31 @@ function add(additive) {
   });
 }
 
+function get(team) {
+  var promise = new Promise(function(resolve, reject) {
+    MongoClient.connect(url, function(err, db) {
+      if (!err) {
+        var orders = db.collection('orders');
+        orders.find({team: team}).toArray(function(err, results) {
+          if (!err) {
+            resolve(results);
+          }
+          else {
+            reject(err)
+          }
+        });
+      }
+      else {
+        reject(err)
+      }
+    });
+  });
+  return promise;
+}
+
 var facade = {
-  add: add
+  add: add,
+  get: get
 }
 
 module.exports = facade;
