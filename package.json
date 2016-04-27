@@ -25,6 +25,7 @@
   "dependencies": {
     "botkit": "^0.1.1",
     "dotenv": "^2.0.0",
+    "mongodb": "^2.1.17",
     "request": "^2.72.0"
   }
 }
