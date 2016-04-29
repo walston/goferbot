@@ -6,9 +6,10 @@ if (!process.env.SLACK_BOT_TOKEN) {
 var Botkit = require('botkit');
 var herald = require('./herald.js');
 var dbmanager = require('./dbmanager.js');
+var wit = require('./ai.js');
 
 var controller = Botkit.slackbot({ debug: true });
-var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN })
+var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN });
 botkit.startRTM();
 
 controller.hears('pick up', 'direct_message', function(bot, message) {
@@ -19,6 +20,14 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
     }).join('\n')
     bot.reply(message, text);
   });
+});
+
+controller.hears('Can I get a cup of coffee?', 'direct_message', function(bot, message) {
+  wit.message(message.text, message.channel, function(err, data) {
+    console.log('**************************************************');
+    console.log(err || data);
+    bot.reply(message, data);
+  })
 })
 
 controller.on('direct_message', function heraldResponse(bot, message) {
