@@ -4,7 +4,6 @@ if (!process.env.SLACK_BOT_TOKEN) {
   process.exit(1);
 }
 var Botkit = require('botkit');
-var herald = require('./herald.js');
 var dbmanager = require('./dbmanager.js');
 
 var controller = Botkit.slackbot({ debug: true });
@@ -50,4 +49,7 @@ controller.on('direct_message', function heraldResponse(bot, message) {
   });
 });
 
-herald();
+botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
+  console.log(convo);
+  convo.say('Good morning! I\'m taking coffee orders right now, would you like anything?');
+});
