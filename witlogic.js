@@ -6,7 +6,6 @@ var actions = {
 }
 
 module.exports.actions = actions;
-module.exports.merge = easyMerge;
 
 function say(sessionId, context, message, cb) {
   console.log(message);
@@ -16,19 +15,17 @@ function say(sessionId, context, message, cb) {
 function merge(sessionId, context, entities, message, cb) {
   var bev = firstEntityValue(entities, 'beverage');
   var size = firstEntityValue(entities, 'beverage_size');
+  var intent = firstEntityValue(entities, 'intent');
   if (bev) {
-    context.bev;
+    context.bev = bev;
+  }
+  if (size) {
+    context.size = size;
+  }
+  if (intent) {
+    context.intent = intent;
   }
   cb(context);
-}
-
-function easyMerge(context, entities) {
-  var bev = firstEntityValue(entities, 'beverage');
-  var size = firstEntityValue(entities, 'beverage_size');
-  if (bev) {
-    context.bev;
-  }
-  return context;
 }
 
 function error(sessionId, context, error) {
