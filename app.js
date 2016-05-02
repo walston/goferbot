@@ -1,10 +1,14 @@
 var dotenv = require('dotenv').config();
-if (!process.env.SLACK_BOT_TOKEN) {
+if (!process.env.SLACK_BOT_TOKEN || !process.env.WIT_TOKEN) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
 var Botkit = require('botkit');
 var dbmanager = require('./dbmanager.js');
+var Wit = require('node-wit').Wit;
+var logic = require('./witlogic.js');
+var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
+var uuid = require('node-uuid')
 
 var controller = Botkit.slackbot({ debug: true });
 var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN })
@@ -20,36 +24,68 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
   });
 })
 
-controller.on('direct_message', function heraldResponse(bot, message) {
-  bot.startConversation(message, function conversation(err, convo) {
-    convo.ask('What would you like?', function takeOrder(response, convo) {
-      var additive = {
-        team: response.team,
-        user: response.user,
-        order: response.text
-      }
-      var getUser = new Promise(function(resolve, reject) {
-        bot.api.users.info({ user: response.user }, function(err, body) {
-          if (!err && body.ok) {
-            additive.name = body.user.name;
-            additive.real_name = body.user.profile.real_name;
-            resolve(additive);
-          }
-          else {
-            reject(additive);
-          }
-        });
-      });
-      getUser.then(function(additive) {
-        convo.say('Awesome: `' + additive.order + '` has been added to the order');
-        dbmanager.add(additive)
-        convo.next();
-      });
-    });
-  });
-});
-
 botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
-  console.log(convo);
-  convo.say('Good morning! I\'m taking coffee orders right now, would you like anything?');
+  convo.sessionId = uuid.v1() || convo.sessionId;
+  convo.context = {};
+  var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+
+  function witProcessing(err, data) {
+    // handle responses from wit.ai/converse
+    console.log('>> RESPONSE CONTENTS <<');
+    console.log(data || err);
+    if (!err) {
+      switch(data.type) {
+        case "merge":
+          convo.context = logic.merge(
+            convo.sessionId,
+            convo.context,
+            data.entities
+          );
+          wit.converse(
+            convo.sessionId,
+            undefined,
+            convo.context,
+            witProcessing
+          );
+          break;
+        case "msg":
+          convo.say(data.msg);
+          convo.next();
+          wit.converse(
+            convo.sessionId,
+            undefined,
+            convo.context,
+            witProcessing
+          );
+          break;
+        case "action":
+          logic.actions[data.action];
+          wit.converse(
+            convo.sessionId,
+            undefined,
+            convo.context,
+            witProcessing
+          );
+          break;
+        case "stop":
+          console.log('All done talking to wit');
+          break;
+        default:
+          console.log('********************');
+          console.log('something went wrong...');
+          console.log(data);
+      }
+    };
+  }
+
+  function userProcessing(response, convo) {
+    wit.converse(
+      convo.sessionId,
+      response.text,
+      convo.context,
+      witProcessing
+    );
+  }
+
+  convo.ask(greeting, userProcessing);
 });
