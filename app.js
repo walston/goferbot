@@ -63,7 +63,15 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
             convo.sessionId,
             convo.context,
             function(context) {
-              return context
+              dbmanager.add({
+                user: convo.source_message.user,
+                beverage: {
+                  bev: context.bev,
+                  size: context.size
+                }
+              }).then(function(results) {
+                console.log('successfully added');
+              })
             }
           );
           wit.converse(
