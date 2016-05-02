@@ -25,9 +25,26 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
 })
 
 botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
-  convo.sessionId = convo.sessionId || uuid.v1();
-  convo.context = {};
-  var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+
+  function initializeConvo(convo) {
+    convo.sessionId = convo.sessionId || uuid.v1();
+    convo.context = {};
+    var promise = new Promise(function getUserInfo(resolve, reject) {
+      var userInfo = { user: convo.source_message.user };
+      botkit.api.users.info(userInfo, function(err, response) {
+        if (!err && response.ok) {
+          convo.user = response.user.profile;
+          convo.user.name = response.user.name;
+          convo.user.id = response.user.id;
+          resolve(convo);
+        }
+        else {
+          reject(convo);
+        }
+      })
+    });
+    return promise;
+  }
 
   function witProcessing(err, data) {
     if (!err) {
@@ -64,7 +81,7 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
             convo.context,
             function(context) {
               dbmanager.add({
-                user: convo.source_message.user,
+                user: convo.user,
                 beverage: {
                   bev: context.bev,
                   size: context.size
@@ -100,6 +117,9 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
       witProcessing
     );
   }
-
-  convo.ask(greeting, askProcessing);
+  initializeConvo(convo)
+  .then(function greet(convo) {
+    var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+    convo.ask(greeting, askProcessing);
+  })
 });
