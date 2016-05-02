@@ -25,41 +25,47 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
 })
 
 botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
-  convo.sessionId = uuid.v1() || convo.sessionId;
+  convo.sessionId = convo.sessionId || uuid.v1();
   convo.context = {};
   var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
 
   function witProcessing(err, data) {
-    // handle responses from wit.ai/converse
-    console.log('>> RESPONSE CONTENTS <<');
-    console.log(data || err);
     if (!err) {
       switch(data.type) {
         case "merge":
-          convo.context = logic.merge(
-            convo.sessionId,
-            convo.context,
-            data.entities
-          );
-          wit.converse(
-            convo.sessionId,
-            undefined,
-            convo.context,
-            witProcessing
-          );
+          var resolveContext = new Promise(function(resolve, reject) {
+            logic.actions.merge(
+              convo.sessionId,
+              convo.context,
+              data.entities,
+              undefined,
+              function(updates) {
+                resolve(updates);
+              }
+            );
+          });
+          resolveContext.then(function(newContext) {
+            convo.context = newContext;
+            wit.converse(
+              convo.sessionId,
+              undefined,
+              convo.context,
+              witProcessing
+            );
+          })
           break;
         case "msg":
-          convo.say(data.msg);
+          convo.ask(data.msg, askProcessing);
           convo.next();
-          wit.converse(
-            convo.sessionId,
-            undefined,
-            convo.context,
-            witProcessing
-          );
           break;
         case "action":
-          logic.actions[data.action];
+          logic.actions[data.action](
+            convo.sessionId,
+            convo.context,
+            function(context) {
+              return context
+            }
+          );
           wit.converse(
             convo.sessionId,
             undefined,
@@ -78,7 +84,7 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
     };
   }
 
-  function userProcessing(response, convo) {
+  function askProcessing(response, convo) {
     wit.converse(
       convo.sessionId,
       response.text,
@@ -87,5 +93,5 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
     );
   }
 
-  convo.ask(greeting, userProcessing);
+  convo.ask(greeting, askProcessing);
 });
