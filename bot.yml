@@ -1,4 +1,19 @@
 name: goferbot
 description: A bot to coordinate the morning coffee run for small offices.
 avatar: avatar.png
-config: 
+config:
+  - name: WIT_TOKEN
+    friendly_name: Wit.ai application token
+    default: GDKCKZAUCAOOESMKEZ2Q337E5OSO6NJF
+    type: secret
+    global: true
+  - name: MLAB_USER
+    friendly_name: Mongo Labs username
+    type: secret
+    global: true
+  - name: MLAB_PASSWORD
+    friendly_name: Mongo Labs password
+    type: secret
+    global: true
+screenshots:
+  - screenshot: screengrab.png
