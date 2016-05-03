@@ -8,7 +8,8 @@ var dbmanager = require('./dbmanager.js');
 var Wit = require('node-wit').Wit;
 var logic = require('./witlogic.js');
 var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
-var uuid = require('node-uuid')
+var uuid = require('node-uuid');
+var EventEmitter = require('events');
 
 var controller = Botkit.slackbot({ debug: true });
 var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN })
@@ -25,78 +26,52 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
 })
 
 botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
+  convo.events = new EventEmitter();
+  convo.events.on('initialized', greet) // fired after initialized
+  convo.events.on('userInput', askProcessing); // fired when a userInput is received
+  convo.events.on('witValidation', witProcessing); // fired when wit.ai is received
+  convo.events.on('merge', merge);
+  convo.events.on('message', message);
+  convo.events.on('action', action);
+  convo.events.on('end', convo.stop);
 
-  function initializeConvo(convo) {
-    convo.sessionId = convo.sessionId || uuid.v1();
-    convo.context = {};
-    var promise = new Promise(function getUserInfo(resolve, reject) {
-      var userInfo = { user: convo.source_message.user };
-      botkit.api.users.info(userInfo, function(err, response) {
-        if (!err && response.ok) {
-          convo.user = response.user.profile;
-          convo.user.name = response.user.name;
-          convo.user.id = response.user.id;
-          resolve(convo);
-        }
-        else {
-          reject(convo);
-        }
-      })
-    });
-    return promise;
+  convo.sessionId = convo.sessionId || uuid.v1();
+  convo.context = {};
+  var userInfo = { user: convo.source_message.user };
+  botkit.api.users.info(userInfo, function(err, response) {
+    if (!err && response.ok) {
+      convo.user = response.user.profile;
+      convo.user.name = response.user.name;
+      convo.user.id = response.user.id;
+      convo.events.emit('initialized');
+    }
+  });
+
+  function greet() {
+    var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+    convo.ask(greeting, askProcessing);
+  }
+
+  function askProcessing(response, convo) {
+    wit.converse(
+      convo.sessionId,
+      response.text,
+      convo.context,
+      witProcessing
+    );
   }
 
   function witProcessing(err, data) {
     if (!err) {
       switch(data.type) {
         case "merge":
-          var resolveContext = new Promise(function(resolve, reject) {
-            logic.actions.merge(
-              convo.sessionId,
-              convo.context,
-              data.entities,
-              undefined,
-              function(updates) {
-                resolve(updates);
-              }
-            );
-          });
-          resolveContext.then(function(newContext) {
-            convo.context = newContext;
-            wit.converse(
-              convo.sessionId,
-              undefined,
-              convo.context,
-              witProcessing
-            );
-          })
+          convo.events.emit('merge', data.entities);
           break;
         case "msg":
-          convo.ask(data.msg, askProcessing);
-          convo.next();
+          convo.events.emit('message', data.msg);
           break;
         case "action":
-          logic.actions[data.action](
-            convo.sessionId,
-            convo.context,
-            function(context) {
-              dbmanager.add({
-                user: convo.user,
-                beverage: {
-                  bev: context.bev,
-                  size: context.size
-                }
-              }).then(function(results) {
-                console.log('successfully added');
-              })
-            }
-          );
-          wit.converse(
-            convo.sessionId,
-            undefined,
-            convo.context,
-            witProcessing
-          );
+          convo.events.emit('action', data.action);
           break;
         case "stop":
           console.log('All done talking to wit');
@@ -109,17 +84,47 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
     };
   }
 
-  function askProcessing(response, convo) {
+  function merge(entities) {
+    var sessionId = convo.sessionId;
+    var context = convo.context;
+    logic.actions.merge(sessionId, context, entities, undefined, cb);
+    function cb(newContext) {
+      convo.context = newContext;
+      wit.converse(
+        convo.sessionId,
+        undefined,
+        convo.context,
+        witProcessing
+      );
+    }
+  }
+
+  function message(text) {
+    convo.ask(text, askProcessing);
+    convo.next();
+  }
+
+  function action(actionName) {
+    logic.actions[actionName](
+      convo.sessionId,
+      convo.context,
+      function(context) {
+        dbmanager.add({
+          user: convo.user,
+          beverage: {
+            bev: context.bev,
+            size: context.size
+          }
+        }).then(function(results) {
+          console.log('successfully added');
+        })
+      }
+    );
     wit.converse(
       convo.sessionId,
-      response.text,
+      undefined,
       convo.context,
       witProcessing
     );
   }
-  initializeConvo(convo)
-  .then(function greet(convo) {
-    var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
-    convo.ask(greeting, askProcessing);
-  })
 });

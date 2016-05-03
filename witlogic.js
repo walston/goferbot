@@ -8,8 +8,7 @@ var actions = {
 module.exports.actions = actions;
 
 function say(sessionId, context, message, cb) {
-  console.log(message);
-  cb();
+  cb(message);
 }
 
 function merge(sessionId, context, entities, message, cb) {
