@@ -1,5 +1,5 @@
 var dotenv = require('dotenv').config();
-if (!process.env.SLACK_BOT_TOKEN || !process.env.WIT_TOKEN) {
+if (!process.env.SLACK_TOKEN || !process.env.WIT_TOKEN) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
@@ -12,7 +12,7 @@ var uuid = require('node-uuid');
 var EventEmitter = require('events');
 
 var controller = Botkit.slackbot({ debug: true });
-var botkit = controller.spawn({ token: process.env.SLACK_BOT_TOKEN })
+var botkit = controller.spawn({ token: process.env.SLACK_TOKEN })
 botkit.startRTM();
 
 controller.hears('pick up', 'direct_message', function(bot, message) {
