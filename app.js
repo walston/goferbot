@@ -106,8 +106,8 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
 
   function action(actionName) {
     var beverage = {
-      bev: context.bev,
-      size: context.size
+      bev: convo.context.bev,
+      size: convo.context.size
     };
     var ticket = {
       user: convo.user,
