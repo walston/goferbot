@@ -29,8 +29,8 @@ function add(additive) {
         reject(err);
       }
     });
-    return promise;
   });
+  return promise;
 }
 
 function get(team) {
