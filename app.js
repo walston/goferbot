@@ -105,21 +105,21 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
   }
 
   function action(actionName) {
-    logic.actions[actionName](
-      convo.sessionId,
-      convo.context,
-      function(context) {
-        dbmanager.add({
-          user: convo.user,
-          beverage: {
-            bev: context.bev,
-            size: context.size
-          }
-        }).then(function(results) {
-          console.log('successfully added');
-        })
-      }
-    );
+    var beverage = {
+      bev: context.bev,
+      size: context.size
+    };
+    var ticket = {
+      user: convo.user,
+      beverage: beverage
+    };
+    function cb() {
+      dbmanager.add(ticket).then(function(results) {
+        console.log('successfully added');
+      });
+    }
+    logic.actions[actionName](convo.sessionId,convo.context, cb);
+
     wit.converse(
       convo.sessionId,
       undefined,
