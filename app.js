@@ -25,7 +25,43 @@ controller.hears('pick up', 'direct_message', function(bot, message) {
   });
 })
 
-botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
+controller.on('direct_message', function(bot, message) {
+  var context = {}
+  wit.message(message.text, function(err, data) {
+    var entities = data.outcomes[0].entities;
+    var intent;
+    logic.actions.merge('', {}, entities, '', function(context) {
+        intent = context.intent;
+      });
+    if (!err && intent == 'addToList') {
+      bot.startTyping(message);
+      console.log('Writing to database...');
+      dbmanager.customerAdd(message.team, message.user)
+        .then(function(databaseResults) {
+          console.log(bot);
+          bot.reply(message, 'Okay, I\'ll write your name down and let you know next time we make a run.');
+        })
+        .catch(function(err) {
+          bot.reply(message, 'Something went wrong. Sorry');
+        })
+      ;
+    }
+    else {
+      bot.reply(message, 'Sorry, i\'m confused by what you\'re saying')
+    }
+  });
+});
+
+controller.on('rtm_open', function(bot) {
+  var teamId = bot.team_info.id;
+  dbmanager.customerList(teamId).then(function(customers) {
+    customers.forEach(function(customer) {
+      botkit.startPrivateConversation(customer, morningCall);
+    });
+  });
+});
+
+function morningCall(error, convo) {
   convo.sessionId = convo.sessionId || uuid.v1();
   convo.context = {};
   var userInfo = { user: convo.source_message.user };
@@ -42,4 +78,4 @@ botkit.startPrivateConversation({ user: 'U0MDN9QK1' }, function(error, convo) {
     var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
     convo.ask(greeting, takeOrder(convo).askProcessing);
   }
-});
+}

@@ -2,7 +2,8 @@ var actions = {
   say: say,
   merge: merge,
   error: error,
-  "placeOrder": placeOrder
+  "placeOrder": placeOrder,
+  "addToList": addToList
 }
 
 module.exports.actions = actions;
@@ -32,6 +33,10 @@ function error(sessionId, context, error) {
 }
 
 function placeOrder(sessionId, context, cb) {
+  cb(context);
+}
+
+function addToList(sessionId, context, cb) {
   cb(context);
 }
 
