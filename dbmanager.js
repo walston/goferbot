@@ -1,9 +1,3 @@
-var dotenv = require('dotenv');
-if (!process.env.MLAB_PASSWORD || !process.env.MLAB_USER) {
-  console.log('Error: Cannot authenticate without user credentials');
-  process.exit(1);
-}
-
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
 var url = 'mongodb://' + process.env.MLAB_USER + ':' + process.env.MLAB_PASSWORD + '@ds021761.mlab.com:21761/goferbot';
