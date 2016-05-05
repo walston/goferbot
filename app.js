@@ -1,8 +1,3 @@
-var dotenv = require('dotenv').config();
-if (!process.env.SLACK_TOKEN || !process.env.WIT_TOKEN) {
-  console.log('Error: Specify token in environment');
-  process.exit(1);
-}
 var Botkit = require('botkit');
 var Beepboop = require('beepboop-botkit');
 var CronJob = require('cron').CronJob;
