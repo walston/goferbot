@@ -1,13 +1,14 @@
+var Beepboop = require('beepboop-botkit');
 var Botkit = require('botkit');
 var Beepboop = require('beepboop-botkit');
 var CronJob = require('cron').CronJob;
-var dbmanager = require('./dbmanager.js');
-var Wit = require('node-wit').Wit;
-var logic = require('./witlogic.js');
-var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
+var dotenv = require('dotenv').config();
 var uuid = require('node-uuid');
+var Wit = require('node-wit').Wit;
+var dbmanager = require('./dbmanager.js');
+var logic = require('./witlogic.js');
 var takeOrder = require('./takeOrder.js');
-
+var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
 var controller = Botkit.slackbot();
 var beepboop = Beepboop.start(controller, {
   debug: true
