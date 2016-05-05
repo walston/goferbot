@@ -23,14 +23,12 @@
   },
   "homepage": "https://github.com/walston/goferbot#readme",
   "dependencies": {
+    "beepboop-botkit": "^1.3.0",
     "botkit": "^0.1.1",
     "cron": "^1.1.0",
     "dotenv": "^2.0.0",
     "mongodb": "^2.1.17",
-    "node-wit": "^3.2.2",
-    "request": "^2.72.0"
-  },
-  "devDependencies": {
-    "chai": "^3.5.0"
+    "node-uuid": "^1.4.7",
+    "node-wit": "^3.2.2"
   }
 }

@@ -1,20 +1,21 @@
-var dotenv = require('dotenv').config();
-if (!process.env.SLACK_TOKEN || !process.env.WIT_TOKEN) {
-  console.log('Error: Specify token in environment');
-  process.exit(1);
-}
+var Beepboop = require('beepboop-botkit');
 var Botkit = require('botkit');
 var CronJob = require('cron').CronJob;
-var dbmanager = require('./dbmanager.js');
-var Wit = require('node-wit').Wit;
-var logic = require('./witlogic.js');
-var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
+var dotenv = require('dotenv').config();
 var uuid = require('node-uuid');
+var Wit = require('node-wit').Wit;
+var dbmanager = require('./dbmanager.js');
+var logic = require('./witlogic.js');
 var takeOrder = require('./takeOrder.js');
+var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
+var controller = Botkit.slackbot();
+var beepboop = Beepboop.start(controller, {
+  debug: true
+});
 
-var controller = Botkit.slackbot({ debug: true });
-var botkit = controller.spawn({ token: process.env.SLACK_TOKEN })
-botkit.startRTM();
+beepboop.on('add_resource', function(msg) {
+  console.log('received request to add bot to team');
+});
 
 controller.hears('pick up', 'direct_message', function(bot, message) {
   var list = dbmanager.get(message.team);
@@ -53,7 +54,7 @@ controller.on('direct_message', function(bot, message) {
   });
 });
 
-controller.on('rtm_open', function(bot) {
+controller.on('bot_join_channel', function(bot) {
   function call() {
     var teamId = bot.team_info.id;
     dbmanager.customerList(teamId).then(function(customers) {
@@ -63,7 +64,8 @@ controller.on('rtm_open', function(bot) {
     });
   };
 
-  new CronJob('00 45 09 * * 1-5', call, null, true, 'America/Los_Angeles');
+  // new CronJob('00 45 09 * * 1-5', call, null, true, 'America/Los_Angeles');
+  call();
 });
 
 function morningCall(error, convo) {
