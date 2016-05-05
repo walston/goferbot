@@ -1,5 +1,6 @@
 var Beepboop = require('beepboop-botkit');
 var Botkit = require('botkit');
+var Beepboop = require('beepboop-botkit');
 var CronJob = require('cron').CronJob;
 var dotenv = require('dotenv').config();
 var uuid = require('node-uuid');
