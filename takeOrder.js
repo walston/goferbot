@@ -81,7 +81,6 @@ module.exports = function takeOrder(convo) {
 
     function cb() {
       dbmanager.add(ticket).then(function(results) {
-        // convo.events.emit('end');
         console.log('successfully added');
       });
     }

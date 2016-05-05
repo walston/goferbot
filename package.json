@@ -24,6 +24,7 @@
   "homepage": "https://github.com/walston/goferbot#readme",
   "dependencies": {
     "botkit": "^0.1.1",
+    "cron": "^1.1.0",
     "dotenv": "^2.0.0",
     "mongodb": "^2.1.17",
     "node-wit": "^3.2.2",

@@ -4,6 +4,7 @@ if (!process.env.SLACK_TOKEN || !process.env.WIT_TOKEN) {
   process.exit(1);
 }
 var Botkit = require('botkit');
+var CronJob = require('cron').CronJob;
 var dbmanager = require('./dbmanager.js');
 var Wit = require('node-wit').Wit;
 var logic = require('./witlogic.js');
@@ -47,18 +48,22 @@ controller.on('direct_message', function(bot, message) {
       ;
     }
     else {
-      bot.reply(message, 'Sorry, i\'m confused by what you\'re saying')
+      bot.reply(message, 'Sorry, i\'m confused by what you\'re saying');
     }
   });
 });
 
 controller.on('rtm_open', function(bot) {
-  var teamId = bot.team_info.id;
-  dbmanager.customerList(teamId).then(function(customers) {
-    customers.forEach(function(customer) {
-      botkit.startPrivateConversation(customer, morningCall);
+  function call() {
+    var teamId = bot.team_info.id;
+    dbmanager.customerList(teamId).then(function(customers) {
+      customers.forEach(function(customer) {
+        botkit.startPrivateConversation(customer, morningCall);
+      });
     });
-  });
+  };
+
+  new CronJob('00 45 09 * * 1-5', call, null, true, 'America/Los_Angeles');
 });
 
 function morningCall(error, convo) {
