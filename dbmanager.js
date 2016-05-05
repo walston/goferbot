@@ -39,6 +39,7 @@ function get(team) {
       if (!err) {
         var orders = db.collection('orders');
         orders.find({team: team}).toArray(function(err, results) {
+          db.close();
           if (!err) {
             resolve(results);
           }
@@ -55,9 +56,68 @@ function get(team) {
   return promise;
 }
 
+function customerAdd(team, userId) {
+  var promise = new Promise(function(resolve, reject) {
+    MongoClient.connect(url, function(err, db) {
+      if (!err) {
+        var customers = db.collection('customers');
+        var customer = {
+          team: team,
+          user: userId
+        }
+        customers.find(customer).toArray(function(err, docs) {
+          if (docs.length > 0) {
+            reject('User already exists');
+          }
+          else {
+            customers.insertOne(customer, function(err, results) {
+              db.close();
+              if (!err) {
+                resolve(results.ops);
+              }
+              else {
+                reject(err);
+              }
+            });
+          }
+        })
+      }
+      else {
+        reject(err);
+      }
+    });
+  });
+  return promise;
+}
+
+function customerList(team) {
+  var promise = new Promise(function(resolve, reject) {
+    MongoClient.connect(url, function(err, db) {
+      if (!err) {
+        var customers = db.collection('customers');
+        customers.find({team: team}).toArray(function(err, results) {
+          db.close();
+          if (!err) {
+            resolve(results);
+          }
+          else {
+            reject(err);
+          }
+        })
+      }
+      else {
+        reject(err);
+      }
+    });
+  });
+  return promise;
+}
+
 var facade = {
   add: add,
-  get: get
+  get: get,
+  customerAdd: customerAdd,
+  customerList: customerList
 }
 
 module.exports = facade;
