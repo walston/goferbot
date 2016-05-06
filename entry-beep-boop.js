@@ -3,7 +3,7 @@ var Beepboop = require('beepboop-botkit');
 var Botkit = require('botkit');
 var dotenv = require('dotenv').config();
 var goferbot = require('./goferbot.js');
-var storage = require('botkit-storage-mongo')({
+var storage = require('./lib/botkit-storage.js')({
   mongoUri: 'mongodb://' +
     process.env.MLAB_USER + ':' +
     process.env.MLAB_PASSWORD +
