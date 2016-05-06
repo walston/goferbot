@@ -19,39 +19,14 @@ module.exports = function(controller, botkit){
     });
   })
 
-  controller.on('direct_message', function(bot, message) {
-    var context = {}
-    wit.message(message.text, function(err, data) {
-      var entities = data.outcomes[0].entities;
-      var intent;
-      logic.actions.merge('', {}, entities, '', function(context) {
-          intent = context.intent;
-        });
-      if (!err && intent == 'addToList') {
-        bot.startTyping(message);
-        console.log('Writing to database...');
-        dbmanager.customerAdd(message.team, message.user)
-          .then(function(databaseResults) {
-            console.log(bot);
-            bot.reply(message, 'Okay, I\'ll write your name down and let you know next time we make a run.');
-          })
-          .catch(function(err) {
-            bot.reply(message, 'Something went wrong. Sorry');
-          })
-        ;
-      }
-      else {
-        bot.reply(message, 'Sorry, i\'m confused by what you\'re saying');
-      }
-    });
-  });
+  controller.on('direct_message', anonymousConvo);
 
-  controller.on('bot_join_channel', function(bot) {
+  controller.on('rtm_open', function(bot) {
     function call() {
       var teamId = bot.team_info.id;
       dbmanager.customerList(teamId).then(function(customers) {
         customers.forEach(function(customer) {
-          botkit.startPrivateConversation(customer, morningCall);
+          bot.startPrivateConversation(customer, morningCall);
         });
       });
     };
@@ -64,8 +39,9 @@ module.exports = function(controller, botkit){
 function morningCall(error, convo) {
   convo.sessionId = convo.sessionId || uuid.v1();
   convo.context = {};
+  var slackApi = convo.task.bot.api;
   var userInfo = { user: convo.source_message.user };
-  botkit.api.users.info(userInfo, function(err, response) {
+  slackApi.users.info(userInfo, function(err, response) {
     if (!err && response.ok) {
       convo.user = response.user.profile;
       convo.user.name = response.user.name;
@@ -78,4 +54,31 @@ function morningCall(error, convo) {
     var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
     convo.ask(greeting, takeOrder(convo).askProcessing);
   }
+}
+
+function anonymousConvo(bot, message) {
+  var context = {}
+  wit.message(message.text, function(err, data) {
+    var entities = data.outcomes[0].entities;
+    var intent;
+    logic.actions.merge('', {}, entities, '', function(context) {
+        intent = context.intent;
+      });
+    if (!err && intent == 'addToList') {
+      bot.startTyping(message);
+      console.log('Writing to database...');
+      dbmanager.customerAdd(message.team, message.user)
+        .then(function(databaseResults) {
+          console.log(bot);
+          bot.reply(message, 'Okay, I\'ll write your name down and let you know next time we make a run.');
+        })
+        .catch(function(err) {
+          bot.reply(message, 'Something went wrong. Sorry');
+        })
+      ;
+    }
+    else {
+      bot.reply(message, 'Sorry, i\'m confused by what you\'re saying');
+    }
+  });
 }
