@@ -2,9 +2,9 @@ var CronJob = require('cron').CronJob;
 var dotenv = require('dotenv').config();
 var uuid = require('node-uuid');
 var Wit = require('node-wit').Wit;
-var dbmanager = require('./dbmanager.js');
-var logic = require('./witlogic.js');
-var takeOrder = require('./takeOrder.js');
+var dbmanager = require('./lib/dbmanager.js');
+var logic = require('./lib/witlogic.js');
+var takeOrder = require('./lib/takeOrder.js');
 
 var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
 
