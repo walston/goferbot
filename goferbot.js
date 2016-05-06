@@ -9,31 +9,19 @@ var takeOrder = require('./lib/takeOrder.js');
 var wit = new Wit(process.env.WIT_TOKEN, logic.actions);
 
 module.exports = function(controller, botkit){
-  controller.hears('pick up', 'direct_message', function(bot, message) {
-    var list = dbmanager.get(message.team);
-    list.then(function(tab) {
-      var text = tab.map(function(order) {
-        return (order.real_name || order.name || order.user) + ' wants `' + order.order + '`';
-      }).join('\n')
-      bot.reply(message, text);
-    });
-  })
-
+  controller.hears('pick up', 'direct_message', getOrderList);
   controller.on('direct_message', anonymousConvo);
+  controller.on('rtm_open', call);
+}
 
-  controller.on('rtm_open', function(bot) {
-    function call() {
-      var teamId = bot.team_info.id;
-      dbmanager.customerList(teamId).then(function(customers) {
-        customers.forEach(function(customer) {
-          bot.startPrivateConversation(customer, morningCall);
-        });
-      });
-    };
-
-    // new CronJob('00 45 09 * * 1-5', call, null, true, 'America/Los_Angeles');
-    call();
-  });
+function getOrderList(bot, message) {
+ var list = dbmanager.get(message.team);
+ list.then(function(tab) {
+   var text = tab.map(function(order) {
+     return (order.real_name || order.name || order.user) + ' wants `' + order.order + '`';
+   }).join('\n')
+   bot.reply(message, text);
+ });
 }
 
 function morningCall(error, convo) {
@@ -41,19 +29,15 @@ function morningCall(error, convo) {
   convo.context = {};
   var slackApi = convo.task.bot.api;
   var userInfo = { user: convo.source_message.user };
-  slackApi.users.info(userInfo, function(err, response) {
-    if (!err && response.ok) {
-      convo.user = response.user.profile;
-      convo.user.name = response.user.name;
-      convo.user.id = response.user.id;
-      greet();
+  slackApi.users.info(userInfo, function(err, ping) {
+    if (!err && ping.ok) {
+      convo.user = ping.user.profile;
+      convo.user.name = ping.user.name;
+      convo.user.id = ping.user.id;
+      var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
+      convo.ask(greeting, takeOrder(convo).askProcessing);
     }
   });
-
-  function greet() {
-    var greeting = 'Good morning! I\'m taking coffee orders right now, would you like anything?'
-    convo.ask(greeting, takeOrder(convo).askProcessing);
-  }
 }
 
 function anonymousConvo(bot, message) {
@@ -82,3 +66,13 @@ function anonymousConvo(bot, message) {
     }
   });
 }
+
+function call(bot) {
+  // new CronJob('00 45 09 * * 1-5', call, null, true, 'America/Los_Angeles');
+  var teamId = bot.team_info.id;
+  dbmanager.customerList(teamId).then(function(customers) {
+    customers.forEach(function(customer) {
+      bot.startPrivateConversation(customer, morningCall);
+    });
+  });
+};
