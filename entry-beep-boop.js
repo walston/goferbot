@@ -1,10 +1,12 @@
-// ENTRY POINT FOR BEEP BOOP SERVERS
 var Beepboop = require('beepboop-botkit');
 var Botkit = require('botkit');
-var dotenv = require('dotenv').config();
 var goferbot = require('./goferbot.js');
+var storage = require('./lib/botkit-storage.js');
 
-var controller = Botkit.slackbot();
+var controller = Botkit.slackbot({
+  debug: true,
+  storage: storage
+});
 var beepboop = Beepboop.start(controller, {
   debug: true
 });
