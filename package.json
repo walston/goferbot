@@ -31,5 +31,9 @@
     "mongodb": "^2.1.17",
     "node-uuid": "^1.4.7",
     "node-wit": "^3.2.2"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "request": "^2.72.0"
   }
 }
